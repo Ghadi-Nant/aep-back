@@ -1,0 +1,541 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Aep {
+  idAep               Int              @id @default(autoincrement())
+  nomAep              String
+  localite            Localite[]
+  typeSysteme         TypeSysteme
+  typePompage         TypePompage
+  statut              StatutEquipement @default(EN_SERVICE)
+  dateService         DateTime
+  nombrePopulation    Int
+  nombreBeneficiaires Int
+  prixEauBf           Decimal @db.Decimal(12, 2)
+  prixEauBp           Decimal @db.Decimal(12, 2)
+  creeLe              DateTime         @default(now())
+  misAJourLe          DateTime         @updatedAt
+  abonnes             Abonne[]
+  conduites           Conduite[]
+  coupureEaux         CoupureEau[]
+  depenses            Depense[]
+  forages             Forage[]
+  kiosques            Kiosque[]
+  maintenance         Maintenance[]
+  panneaux            Panneau[]
+  recetes             Recete[]
+  resrvoirs           Reservoir[]
+  stocks              Stock[]
+}
+
+model Localite {
+  idLocalite Int    @id @default(autoincrement())
+  nom        String
+  aepId      Int
+  aep        Aep    @relation(fields: [aepId], references: [idAep], onDelete: Cascade)
+}
+
+model Forage {
+  idForage   Int              @id @default(autoincrement())
+  profondeur Float
+  debit      Float
+  statut     StatutEquipement @default(EN_SERVICE)
+  idAep      Int
+
+  aep        Aep         @relation(fields: [idAep], references: [idAep], onDelete: Cascade)
+  pompes     Pompe[]
+  reservoirs Reservoir[]
+
+  creeLe     DateTime @default(now())
+  misAJourLe DateTime @updatedAt
+}
+
+model Pompe {
+  idPompe     Int    @id @default(autoincrement())
+  position    String
+  debit       Float
+  puissance   Float
+  HMT         Float
+  idForage    Int
+  idReservoir Int
+
+  forage      Forage          @relation(fields: [idForage], references: [idForage])
+  reservoir   Reservoir       @relation(fields: [idReservoir], references: [idReservoir])
+  productions ProductionEau[]
+
+  creeLe     DateTime @default(now())
+  misAJourLe DateTime @updatedAt
+}
+
+model Reservoir {
+  idReservoir   Int               @id @default(autoincrement())
+  volume        Float
+  idForage      Int
+  idAep         Int
+  creeLe        DateTime          @default(now())
+  
+  misAJourLe    DateTime          @updatedAt
+  conduites     Conduite[]
+  distributions DistributionEau[]
+  kiosques      Kiosque[]
+  panneaux      Panneau[]
+  pointEau      PointEau[]
+  pompes        Pompe[]
+  productions   ProductionEau[]
+  aep           Aep               @relation(fields: [idAep], references: [idAep], onDelete: Cascade)
+  forage        Forage            @relation(fields: [idForage], references: [idForage], onDelete: Cascade)
+}
+
+model Panneau {
+  idPanneau      Int       @id @default(autoincrement())
+  puissanceTotal Float
+  nombrePanneau  Int
+  idReservoir    Int
+  idAep          Int
+  creeLe         DateTime  @default(now())
+  misAJourLe     DateTime  @updatedAt
+  aep            Aep       @relation(fields: [idAep], references: [idAep], onDelete: Cascade)
+  reservoir      Reservoir @relation(fields: [idReservoir], references: [idReservoir], onDelete: Cascade)
+}
+
+model Conduite {
+  idConduite   Int          @id @default(autoincrement())
+  typeMateriau TypeMateriau
+  dn           Dn
+  longueur     Float
+  idReservoir  Int
+  idAep        Int
+  creeLe       DateTime     @default(now())
+  misAJourLe   DateTime     @updatedAt
+  aep          Aep          @relation(fields: [idAep], references: [idAep], onDelete: Cascade)
+  reservoir    Reservoir    @relation(fields: [idReservoir], references: [idReservoir], onDelete: Cascade)
+}
+
+model PointEau {
+  idPointEau  Int        @id @default(autoincrement())
+  nbKiosque   Int
+  nbBP        Int
+  saveur      TypeSaveur
+  idReservoir Int
+  reservoir   Reservoir  @relation(fields: [idReservoir], references: [idReservoir], onDelete: Cascade)
+}
+
+model ProductionEau {
+  idProduction   Int       @id @default(autoincrement())
+  dateHeure      DateTime
+  IndexReservoir Float
+  volumeProduit  Decimal @db.Decimal(13, 3)
+  idReservoir    Int
+  idPompe        Int
+  creeLe         DateTime  @default(now())
+  misAJourLe     DateTime  @updatedAt
+  pompe          Pompe     @relation(fields: [idPompe], references: [idPompe], onDelete: Cascade)
+  reservoir      Reservoir @relation(fields: [idReservoir], references: [idReservoir], onDelete: Cascade)
+}
+
+model DistributionEau {
+  idDistribution  Int       @id @default(autoincrement())
+  dateHeure       DateTime
+  indexCompteur   Int
+  volumeDistribue Decimal @db.Decimal(13, 3)
+  idReservoir     Int
+  creeLe          DateTime  @default(now())
+  misAJourLe      DateTime  @updatedAt
+  reservoir       Reservoir @relation(fields: [idReservoir], references: [idReservoir], onDelete: Cascade)
+}
+
+model Kiosque {
+  idKiosque   Int                @id @default(autoincrement())
+  numKiosque  String
+  idReservoir Int
+  idaep       Int
+  creeLe      DateTime           @default(now())
+  misAJourLe  DateTime           @updatedAt
+  reservoir   Reservoir          @relation(fields: [idReservoir], references: [idReservoir], onDelete: Cascade)
+  aep         Aep                @relation(fields: [idaep], references: [idAep], onDelete: Cascade)
+  versements  VersementKiosque[]
+}
+
+model VersementKiosque {
+  idVersement         Int      @id @default(autoincrement())
+  dateVersement       DateTime
+  nomFontainier       String
+  telephoneFontainier String
+  acienIndex          Float
+  nouvelIndex         Float
+  quantite            Float
+  prix                Float
+  recetteTheorique    Float
+  recetteVersee       Float
+  restePayer          Float
+  idKiosque           Int
+  creeLe              DateTime @default(now())
+  misAJourLe          DateTime @updatedAt
+  kiosque             Kiosque  @relation(fields: [idKiosque], references: [idKiosque], onDelete: Cascade)
+  recette     Recete?
+}
+
+model Abonne {
+  idAbonne   Int            @id @default(autoincrement())
+  refClient  String
+  nom        String
+  prenom     String
+  adresse    String
+  typeAbonne TypeAboService
+  statut     StatutAbonnement @default(ACTIF)
+  idAep      Int
+  creeLe     DateTime       @default(now())
+  misAJourLe DateTime       @updatedAt
+  aep        Aep            @relation(fields: [idAep], references: [idAep], onDelete: Cascade)
+  compteur   Compteur?
+  devisBp    DevisBP[]
+}
+
+model Compteur {
+  idCompteur  Int      @id @default(autoincrement())
+  numCompteur String
+  idAbonne    Int      @unique
+  creeLe      DateTime @default(now())
+  misAJourLe  DateTime @updatedAt
+  abonne      Abonne   @relation(fields: [idAbonne], references: [idAbonne])
+  releve      Releve[]
+}
+
+model Releve {
+  idReleve     Int       @id @default(autoincrement())
+  dateReleve   DateTime
+  ancienIndex  Float
+  nouvelIndex  Float
+  consommation Float
+  idCompteur   Int
+  creeLe       DateTime  @default(now())
+  misAJourLe   DateTime  @updatedAt
+  facture      Facture?
+  compteur     Compteur  @relation(fields: [idCompteur], references: [idCompteur], onDelete: Cascade)
+}
+
+model Facture {
+  idFacture      Int        @id @default(autoincrement())
+  numFacture     String        @unique
+  dateEdition    DateTime   @default(now())
+  datePresentation  DateTime
+  dateLimite     DateTime
+  dateCoupure    DateTime
+  moisFacturation Int?
+  anneeFacturation Int?
+  montantConsommation Decimal @db.Decimal(12, 2)
+  fraisFixe       Decimal @db.Decimal(10, 2)
+  montantTotal    Decimal @db.Decimal(12, 2)
+  statut         StatutFacture @default(EN_ATTENTE)
+  idReleve       Int @unique
+  creeLe         DateTime   @default(now())
+  misAJourLe     DateTime   @updatedAt
+  releve         Releve     @relation(fields: [idReleve], references: [idReleve])
+  paiment        Paiement[]
+}
+  
+model Paiement {
+  idPaiement   Int      @id @default(autoincrement())
+  datePaiement DateTime
+  montantPaye  Decimal @db.Decimal(12, 2)
+  idFacture    Int
+  creeLe       DateTime @default(now())
+  misAJourLe   DateTime @updatedAt
+  facture      Facture  @relation(fields: [idFacture], references: [idFacture], onDelete: Cascade)
+  recette     Recete?
+}
+
+model Maintenance {
+  idMaintenance   Int             @id @default(autoincrement())
+  typeIntervation TypeIntervation
+  dateIntervation DateTime
+  nomReparateur   String
+  photo           String
+  idAep           Int
+  creeLe          DateTime        @default(now())
+  misAJourLe      DateTime        @updatedAt
+  aep             Aep             @relation(fields: [idAep], references: [idAep], onDelete: Cascade)
+}
+
+model CoupureEau {
+  idCoupure  Int      @id @default(autoincrement())
+  dateDebut  DateTime
+  dateFin    DateTime?
+  duree      Float?
+  uniteDuree UniteDuree? 
+  raison     String
+  idAep      Int
+  creeLe     DateTime @default(now())
+  misAJourLe DateTime @updatedAt
+  aep        Aep      @relation(fields: [idAep], references: [idAep], onDelete: Cascade)
+}
+
+model Depense {
+  idDepense      Int            @id @default(autoincrement())
+  dateDepense    DateTime
+  typeService    TypeAboService
+  libelleDepense LibelleDepense
+  montant        Decimal @db.Decimal(12, 2)
+  idAep          Int
+  creeLe         DateTime       @default(now())
+  misAJourLe     DateTime       @updatedAt
+  aep            Aep            @relation(fields: [idAep], references: [idAep], onDelete: Cascade)
+}
+
+model Recete {
+  idRecete      Int            @id @default(autoincrement())
+  dateRecete    DateTime
+  typeService   TypeAboService
+  libelleRecete LibelleRecete
+  montant       Decimal @db.Decimal(12, 2)
+  idAep         Int
+  idPaiement    Int?           @unique
+  idVersement   Int?           @unique
+  creeLe        DateTime       @default(now())
+  misAJourLe    DateTime       @updatedAt
+  aep           Aep            @relation(fields: [idAep], references: [idAep], onDelete: Cascade)
+  paiement      Paiement?      @relation(fields: [idPaiement], references: [idPaiement], onDelete: Cascade)
+  versement     VersementKiosque? @relation(fields: [idVersement], references: [idVersement], onDelete: Cascade)
+}
+
+model Stock {
+  idStock      Int          @id @default(autoincrement())
+  designation  String
+  libelleStock LibelleStock
+  idAep        Int
+  creeLe       DateTime     @default(now())
+  misAJourLe   DateTime     @updatedAt
+  aep          Aep          @relation(fields: [idAep], references: [idAep], onDelete: Cascade)
+}
+
+model DevisBP {
+  idDevis         Int      @id @default(autoincrement())
+  numDevis        String
+  designation     String
+  statut          StatutDevis @default(EN_ATTENTE)
+  montant         Decimal @db.Decimal(12, 2)
+  idAbonne        Int
+  creeLe          DateTime @default(now())
+  misAJourLe      DateTime @updatedAt
+  abonne          Abonne   @relation(fields: [idAbonne], references: [idAbonne], onDelete: Cascade)
+}
+
+model Utilisateur {
+  idUtilisateur Int @id @default(autoincrement())
+
+  nom   String?
+  email String? @unique
+  telephone String? @unique
+
+  estActif Boolean @default(true)
+
+  creeLe DateTime @default(now())
+  misAJourLe DateTime @updatedAt
+
+  roleUtilisateur RoleUtilisateur @default(UTILISATEUR)
+
+  identites IdentiteAuth[]
+  sessions  SessionUtilisateur[]
+}
+
+model IdentiteAuth {
+  idIdentite        Int         @id @default(autoincrement())
+  idUtilisateur Int
+  utilisateur Utilisateur @relation(fields: [idUtilisateur], references: [idUtilisateur], onDelete: Cascade)
+
+  fournisseur    FournisseurAuth
+  idFournisseur  String
+  hashMotDePasse String?
+
+  jetonReinitialisationMotDePasse   String?   @unique
+  expirationReinitialisationMotDePasse DateTime?
+
+  creeLe DateTime @default(now())
+  misAJourLe DateTime @updatedAt
+
+  @@unique([fournisseur, idFournisseur])
+  @@index([idUtilisateur])
+}
+
+model SessionUtilisateur {
+  idSession        Int         @id @default(autoincrement())
+  idUtilisateur Int
+  utilisateur Utilisateur @relation(fields: [idUtilisateur], references: [idUtilisateur], onDelete: Cascade)
+
+  hashJetonRafraichissement String
+  expireLe                  DateTime
+  revoqueLe                 DateTime?
+
+  creeLe DateTime @default(now())
+  misAJourLe DateTime @updatedAt
+
+  @@index([idUtilisateur])
+  @@index([expireLe])
+}
+
+model Parametre {
+  idParametre Int @id @default(autoincrement())
+  fraisFixeFacture Decimal @db.Decimal(10, 2)
+  delaiPresentation Int @default(3)
+  delaiLimite       Int @default(10)
+  delaiCoupure      Int @default(15)
+}
+
+enum TypeSysteme {
+  AEPP
+  AEPG
+  Autres
+}
+
+enum TypePompage {
+  SOLAIRE
+  THERMIQUE
+  GRAVITEUR
+  THERMISOLAIRE
+  ELECTRIQUE
+}
+
+enum StatutEquipement {
+  EN_SERVICE
+  EN_PANNE
+  MAINTENANCE
+  HORS_SERVICE
+}
+
+enum TypeMateriau {
+  PVC
+  PEHD
+}
+
+enum Dn {
+  DN125
+  DN110
+  DN90
+  DN63
+  DN50
+  DN40
+  DN32
+}
+
+enum Adresse {
+  VILLAGE
+  QUARTIER
+}
+
+enum TypeAboService {
+  BF
+  BP
+  BA
+  BS
+}
+
+enum TypeIntervation {
+  PREVENTIVE
+  CURATIVE
+}
+
+enum LibelleDepense {
+  CARBURANT
+  SALAIRES_GERANT
+  SALAIRES_FONTANIERS
+  SALAIRES_GARDIENS
+  SALAIRES_TECHNICIENS
+  LOYER
+  DEPLACEMENT
+  TRANSPORT
+  COMMUNICATION
+  ENTRETIEN_PERIODIQUE
+  FOURNITURES
+  ACCESOIRES_BF
+  ACCESOIRES_BP
+  ELECTRICITE
+  REPARATION
+  TAXES_COMMUNALES
+  FRAIS_RENOUVELLEMENT_ET_EXTENSIONS_FRE
+  AUTRES
+}
+
+enum LibelleRecete {
+  VERSEMENT_KIOSQUE
+  VERSEMENT_BP
+  VERSEMENT_NON_PAYE_BP
+  NOUVEAU_BRANCHEMENT
+  RETOUR_A_LA_CAISSE
+  AUTRES
+}
+
+enum LibelleStock {
+  FOURNITURES_DE_BUREAU
+  MATERIEL_ET_EQUIPEMENT_GROUPE
+  MATERIEL_ET_EQUIPEMENT_MOTO_POMPE
+  MATERIEL_ET_EQUIPEMENT_POMPE_IMMERGEE
+  MATERIEL_ET_EQUIPEMENT_PANNEAUX_SOLAIRES
+  MATERIEL_ET_EQUIPEMENT_AUTRES
+  MATERIEL_DEFECTUEUX
+  ACCESOIRES_PLOMBERIE_ET_TUYAUTERIE_ROBINET
+  ACCESOIRES_PLOMBERIE_ET_TUYAUTERIE_VANNE
+  ACCESOIRES_PLOMBERIE_ET_TUYAUTERIE_MANCHON
+  ACCESOIRES_PLOMBERIE_ET_TUYAUTERIE_TE
+  ACCESOIRES_PLOMBERIE_ET_TUYAUTERIE_TUYAU
+  ACCESOIRES_PLOMBERIE_ET_TUYAUTERIE_COMPTEUR
+  ACCESOIRES_PLOMBERIE_ET_TUYAUTERIE_EMBOUT_TARAUDE
+  ACCESOIRES_PLOMBERIE_ET_TUYAUTERIE_EMBOUT_FILETE
+  ACCESOIRES_PLOMBERIE_ET_TUYAUTERIE_COUDE
+  ACCESOIRES_PLOMBERIE_ET_TUYAUTERIE_AUTRES
+}
+
+enum TypeSaveur {
+  DOUCHE
+  SALE
+  SAUMATRE
+}
+
+enum StatutFacture {
+  EN_ATTENTE
+  PAYEE
+  EN_RETARD
+  ANNULEE
+}
+
+enum RoleUtilisateur {
+  UTILISATEUR
+  ADMIN
+  GERANT
+  TECHNICIEN
+}
+
+enum FournisseurAuth {
+  MOT_DE_PASSE
+  GOOGLE
+  APPLE
+  TELEPHONE
+  FACEBOOK
+}
+
+enum UniteDuree {
+  SECONDE
+  MINUTE
+  HEURE
+  JOUR
+  MOIS
+  ANNEE
+}
+
+enum StatutDevis {
+  EN_ATTENTE
+  PAYE
+  ANNULE
+}
+
+enum StatutAbonnement {
+  ACTIF
+  SUSPENDU
+  RESILE
+}

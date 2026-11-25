@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Facture ECLAEA</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: #e8e8e8;
+      color: #111;
+      font-family: "Times New Roman", Times, serif;
+    }
+
+    .sheet {
+      position: relative;
+      width: 210mm;
+      height: 297mm;
+      margin: 12px auto;
+      padding: 9mm 12mm 8mm;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+      font-size: 8.4pt;
+    }
+
+    .invoice {
+      width: 100%;
+    }
+
+    .company-heading {
+      height: 7mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #c8c2bb;
+      margin-bottom: 3mm;
+      padding: 0 3mm;
+    }
+
+    .company-heading h1,
+    .company-heading h2 {
+      margin: 0;
+      font-size: 9.2pt;
+      line-height: 1;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .identity-grid {
+      display: grid;
+      grid-template-columns: 1fr 0.82fr;
+      gap: 5mm;
+      min-height: 29mm;
+    }
+
+    .company-block,
+    .stub-company {
+      display: flex;
+      align-items: center;
+      gap: 4mm;
+    }
+
+    .logo {
+      display: block;
+      width: 29mm;
+      height: 25mm;
+      object-fit: contain;
+      flex: 0 0 auto;
+    }
+
+    .company-details p,
+    .customer-block p,
+    .stub-customer p {
+      margin: 0 0 2mm;
+      font-size: 8pt;
+      line-height: 1.12;
+      font-style: italic;
+    }
+
+    .company-details strong,
+    .customer-block strong,
+    .stub-customer strong {
+      font-weight: 700;
+    }
+
+    .customer-block {
+      padding-top: 1mm;
+    }
+
+    .customer-block p,
+    .stub-customer p {
+      display: grid;
+      grid-template-columns: 37mm 1fr;
+      gap: 1mm;
+      white-space: nowrap;
+    }
+
+    .invoice-number {
+      margin: 1mm 0 2mm 17mm;
+      font-size: 8.3pt;
+      font-weight: 700;
+    }
+
+    .month {
+      margin: 0 0 1.5mm 130mm;
+      white-space: nowrap;
+    }
+
+    .dates-and-index {
+      display: grid;
+      grid-template-columns: 0.82fr 1.18fr;
+      gap: 3mm;
+      align-items: center;
+    }
+
+    .dates {
+      padding-left: 2mm;
+    }
+
+    .dates p {
+      margin: 0 0 2.4mm;
+      font-size: 8pt;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 8pt;
+    }
+
+    th,
+    td {
+      border: 0.35mm solid #333;
+      padding: 1.35mm 1mm;
+      line-height: 1.05;
+      font-weight: 400;
+    }
+
+    th {
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .billing-table {
+      margin-top: 0;
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 8pt;
+    }
+
+    .billing-table .billing-col-label { width: 25%; }
+    .billing-table .billing-col-quantity { width: 23%; }
+    .billing-table .billing-col-unit { width: 25%; }
+    .billing-table .billing-col-total { width: 27%; }
+
+    .billing-table th,
+    .billing-table td {
+      border: 0.35mm solid #333;
+      padding: 1.25mm 1mm;
+      line-height: 1.05;
+    }
+
+    .billing-table th {
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .billing-table td:first-child {
+      text-align: left;
+    }
+
+    .billing-table td:not(:first-child) {
+      text-align: center;
+    }
+
+    .billing-table .days-label {
+      text-align: right !important;
+      font-weight: 700;
+    }
+
+    .billing-table .center {
+      text-align: center;
+    }
+
+    .billing-table .billing-section-heading th {
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .billing-table .total-row td {
+      font-weight: 700;
+    }
+
+    .manager {
+      margin: 4mm 1mm 0 0;
+      text-align: right;
+      font-size: 8pt;
+    }
+
+    .amount-in-words {
+      margin: 2mm 0 0 2mm;
+    }
+
+    .amount-in-words p {
+      display: flex;
+      align-items: baseline;
+      gap: 5mm;
+      margin: 0 0 3mm;
+      font-size: 8pt;
+    }
+
+    .amount-in-words p:first-child b {
+      font-weight: 700;
+    }
+
+    .amount-in-words p:last-child {
+      gap: 5mm;
+    }
+
+    .unpaid-note {
+      margin: 7mm 0 0 2mm;
+      font-size: 7.8pt;
+      line-height: 1.25;
+    }
+
+    .unpaid-note em,
+    .stub-note em {
+      font-weight: 700;
+    }
+
+    .cut-line {
+      height: 0;
+      border-top: 0.25mm solid #777;
+      margin: 8mm 0 5mm;
+    }
+
+    .invoice-stub .company-heading {
+      margin-bottom: 2mm;
+    }
+
+    .invoice-stub .company-heading h2 {
+      font-size: 9pt;
+    }
+
+    .stub-top {
+      display: grid;
+      grid-template-columns: 1fr 0.88fr;
+      gap: 4mm;
+      min-height: 27mm;
+    }
+
+    .stub-company .logo {
+      width: 27mm;
+      height: 23mm;
+    }
+
+    .stub-company .company-details p {
+      margin-bottom: 1.8mm;
+    }
+
+    .stub-customer {
+      padding-top: 1mm;
+    }
+
+    .stub-customer p {
+      grid-template-columns: 34mm 1fr;
+      margin-bottom: 2mm;
+    }
+
+    .stub-content {
+      display: grid;
+      grid-template-columns: 1.2fr 0.9fr;
+      gap: 5mm;
+      margin-top: 1mm;
+    }
+
+    .stub-payment p {
+      display: grid;
+      grid-template-columns: 37mm 1fr;
+      gap: 1mm;
+      margin: 0 0 2.2mm;
+      font-size: 8pt;
+      line-height: 1.1;
+    }
+
+    .stub-payment p:first-child,
+    .stub-payment p:nth-child(2) {
+      display: block;
+      font-weight: 700;
+    }
+
+    .stub-payment p:nth-child(2) {
+      margin-bottom: 3mm;
+    }
+
+    .stub-index {
+      padding-top: 0;
+    }
+
+    .stub-month {
+      margin: -4mm 0 1mm;
+      text-align: right;
+      font-size: 8pt;
+    }
+
+    .stub-index table td {
+      padding: 1.2mm 1mm;
+    }
+
+    .stub-index table td:last-child {
+      text-align: center;
+    }
+
+    .stub-manager {
+      margin: 4mm 1mm 0 0;
+      text-align: right;
+      font-size: 8pt;
+    }
+
+    .stub-note {
+      margin: 20mm 0 0 2mm;
+      font-size: 7.8pt;
+      line-height: 1.2;
+    }
+
+    /* Impression / Puppeteer */
+    @media print {
+      html,
+      body {
+        width: 210mm;
+        height: 297mm;
+        background: #fff;
+      }
+
+      .sheet {
+        margin: 0;
+        box-shadow: none;
+        page-break-after: avoid;
+        break-after: avoid;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <!-- EXEMPLAIRE PRINCIPAL -->
+    <section class="invoice invoice-main">
+      <header class="company-heading">
+        <h1>GESTION ET EXPLOITATION DU SYSTEME D'{{entreprise.nom}}</h1>
+      </header>
+
+      <div class="identity-grid">
+        <div class="company-block">
+          <img class="logo" src="./assets/logo-eclaea.png" alt="Logo ECLAEA" />
+          <div class="company-details">
+            <p><strong>Adresse :</strong> Tranomora N°41 Toliara II</p>
+            <p><strong>NIF :</strong> 4002167060</p>
+            <p><strong>STAT :</strong> 71103 51 2016 0 00007</p>
+            <p><strong>Téléphone :</strong> 034 08 818 87</p>
+            <p><strong>E-mail :</strong> eau.assainissement16@gmail.com</p>
+          </div>
+        </div>
+
+        <div class="customer-block">
+          <p><strong>Doit :</strong><span>{{abonne.nom}}</span></p>
+          <p><strong>Adresse :</strong><span>{{abonne.adresse}}</span></p>
+          <p><strong>Référence Client :</strong><span>{{abonne.reference}}</span></p>
+          <p><strong>Référence Compteur :</strong><span>{{compteur.reference}}</span></p>
+        </div>
+      </div>
+
+      <div class="invoice-number">FACTURE N° : {{numFacture}}</div>
+
+      <div class="month">Mois : <strong>{{mois}}</strong></div>
+
+      <div class="dates-and-index">
+        <div class="dates">
+          <p><strong>Date d'édition :</strong> {{dateEdition}}</p>
+          <p><strong>Date de présentation :</strong> {{datePresentation}}</p>
+          <p><strong>Date limite de paiement :</strong> {{dateLimite}}</p>
+          <p><strong>Date de coupure :</strong> {{dateCoupure}}</p>
+        </div>
+
+        <table class="billing-table">
+          <colgroup>
+            <col class="billing-col-label" />
+            <col class="billing-col-quantity" />
+            <col class="billing-col-unit" />
+            <col class="billing-col-total" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th style="border: 0;"></th>
+              <th colspan="3">EAU</th>
+            </tr>
+            <tr>
+              <th style="border: 0;"></th>
+              <th></th>
+              <th>Date</th>
+              <th>Index</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="border: 0;"></td>
+              <td>Nouvel index</td>
+              <td>{{dateReleve}}</td>
+              <td>{{nouvelIndex}}</td>
+            </tr>
+            <tr>
+              <td style="border: 0;"></td>
+              <td>Ancien index</td>
+              <td>{{-}}</td>
+              <td>{{ancieIndex}}</td>
+            </tr>
+            <tr>
+              <td style="border: 0;"></td>
+              <td colspan="2">Consommation total</td>
+              <td>{{releve.consommation}}</td>
+            </tr>
+            <tr>
+              <td colspan="3" class="days-label">Nombres de jours de consommation :</td>
+              <td class="center">{{joursConsommation}}</td>
+            </tr>
+            <tr class="billing-section-heading">
+              <th></th>
+              <th>Quantité (m³)</th>
+              <th>Prix unitaire (Ar)</th>
+              <th>Montant (Ar)</th>
+            </tr>
+            <tr><td>Consommation</td>
+              <td>{{consommation}}</td>
+              <td>{{prixM3}}</td>
+              <td>{{montantConsommation}}</td>
+            </tr>
+            <tr>
+              <td>Part fixe</td>
+              <td></td>
+              <td></td>
+              <td>{{prixFixe}}</td>
+            </tr>
+            <tr class="total-row">
+              <td>TOTAL</td>
+              <td></td>
+              <td></td>
+              <td>{{montantTotal}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+
+
+      <div class="manager">Le Gérant</div>
+
+      <div class="amount-in-words">
+        <p><strong>NET A PAYER :</strong><b>{{montantTotal}}</b><b>Ariary TTC</b></p>
+        <p><strong>Arrêté à la somme de :</strong><b>{{montantEnLettres}} Ariary TTC</b></p>
+      </div>
+
+      <p class="unpaid-note">
+        Nombre facture non payer<br />
+        <em>Hiangaviana ianareo hanatitra FACTURE any amin'ny BIRAO fa tsy miantoka ny tsy misy ROSIA ny tomponandraikitra voalohany</em>
+      </p>
+    </section>
+
+    <div class="cut-line" aria-hidden="true"></div>
+
+    <!-- TALON / TABLEAU DE FACTURATION -->
+    <section class="invoice invoice-stub">
+      <header class="company-heading">
+        <h2>GESTION ET EXPLOITATION DU SYSTEME D'{{entreprise.nom}}</h2>
+      </header>
+
+      <div class="stub-top">
+        <div class="stub-company">
+          <img class="logo" src="./assets/logo-eclaea.png" alt="Logo ECLAEA" />
+          <div class="company-details">
+            <p><strong>Adresse :</strong> Tranomora N°41 Toliara II</p>
+            <p><strong>NIF :</strong> 4002167060</p>
+            <p><strong>STAT :</strong> 71103 51 2016 0 00007</p>
+            <p><strong>Téléphone :</strong> 034 08 818 87</p>
+            <p><strong>E-mail :</strong> eau.assainissement16@gmail.com</p>
+          </div>
+        </div>
+        <div class="stub-customer">
+          <p><strong>Doit :</strong><b>{{abonne.nom}}</b></p>
+          <p><strong>Adresse :</strong><b>{{abonne.adresse}}</b></p>
+          <p><strong>Référence Client :</strong><b>{{abonne.reference}}</b></p>
+          <p><strong>Référence Compteur :</strong><b>{{abonne.compteur}}</b></p>
+        </div>
+      </div>
+
+      <div class="stub-content">
+        <div class="stub-payment">
+          <p><strong>NET A PAYER :</strong> {{montantTotal}} AR TTC</p>
+          <p><em>{{montantEnLettres}} Ariary TTC</em></p>
+          <p><strong>FACTURE N° :</strong><span>{{numFacture}}</span></p>
+          <p><strong>RECU N° :</strong><span>________________</span></p>
+          <p><strong>Date de Paiement :</strong><span>________________</span></p>
+          <p><strong>Mode de Paiement :</strong><span>________________</span></p>
+          <p><strong>Payer par :</strong><span>________________</span></p>
+        </div>
+
+        <div class="stub-index">
+          <div class="stub-month">Mois : <strong>{{mois}}</strong></div>
+          <table>
+            <tbody>
+              <tr><td>Nouvel index</td><td>{{nouvelIndex}}</td></tr>
+              <tr><td>Ancien index</td><td>{{ancieIndex}}</td></tr>
+              <tr><td>Consommation (m3)</td><td>{{consommation}}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="stub-manager">Le Gérant</div>
+      <p class="stub-note">
+        <em>Hiangaviana ianareo hanatitra FACTURE any amin'ny BIRAO fa tsy miantoka ny tsy misy ROSIA ny tomponandraikitra voalohany</em>
+      </p>
+    </section>
+  </main>
+</body>
+</html>
